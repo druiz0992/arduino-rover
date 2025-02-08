@@ -2,3 +2,5 @@
 *.swp
 MyBlink/
 RangeSensor2/
+libraries/Audio
+libraries/Bridge
