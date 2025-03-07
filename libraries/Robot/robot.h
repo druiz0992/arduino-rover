@@ -9,34 +9,35 @@
 #define ROBOT_STATUS_ERROR_BUSY_SENSOR_SLOT 3
 
 #define NO_ISR 1234
-#define ROBOT_N_WHEELS 2
+#define ROBOT_N_CONTROLLERS 1
 
 #include "sensor.h"
 #include "controller_L298N.h"
 #include "serial.h"
 
-class Robot {
-    public:
-        Robot();
+class Robot
+{
+public:
+    Robot();
 
-        uint8_t installSensor(Sensor *sensor, MeasurementBase *sample, t_pin , uint8_t, uint8_t);
-        uint8_t installIsr(uint8_t sensor_idx, t_pin pin_number, uint8_t mode);
-        void initialize();
-        void readSensors();
-        void readAndDispatchSensors();
-        void readSensor(uint8_t);
-        void isrHandler(uint8_t sensor_idx);
-        template<typename T>
-        T getMeasurement(uint8_t sensor_idx);
+    uint8_t installSensor(Sensor *sensor, MeasurementBase *sample, t_pin, uint8_t, uint8_t, char *);
+    uint8_t installIsr(uint8_t sensor_idx, t_pin pin_number, uint8_t mode);
+    void initialize();
+    void readSensors();
+    void readAndDispatchSensors();
+    void readSensor(uint8_t);
+    void isrHandler(uint8_t sensor_idx);
+    template <typename T>
+    T getMeasurement(uint8_t sensor_idx);
 
-        void installController(ControllerL298N *controller, uint8_t idx);
+    void installController(CombinedControllerL298N *controller, uint8_t idx, char *channel);
+    void readCommand();
 
-    private:
-        Sensor *_sensors[ROBOT_MAX_N_SENSORS];
-        MeasurementBase *_samples[ROBOT_MAX_N_SENSORS];
-        ControllerL298N *_wheels[ROBOT_N_WHEELS];
-        SerialComms *_serial;
-
+private:
+    Sensor *_sensors[ROBOT_MAX_N_SENSORS];
+    MeasurementBase *_samples[ROBOT_MAX_N_SENSORS];
+    CombinedControllerL298N *_controller[ROBOT_N_CONTROLLERS];
+    SerialComms *_serial;
 };
 
 #endif

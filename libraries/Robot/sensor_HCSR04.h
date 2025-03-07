@@ -15,30 +15,30 @@
 #define HCSR04_MEASUREMENT_MIN_WIDTH 4
 #define HCSR04_MEASUREMENT_PRECISION 2
 
-class MeasurementHcsr04: public Measurement<float> {
-    public:
-      void toString(char *str) const override {
-        char _value_str[HCSR04_MAX_MEASUREMENT_LEN];
-        dtostrf(_value, HCSR04_MEASUREMENT_MIN_WIDTH, HCSR04_MEASUREMENT_PRECISION, _value_str);
-        sprintf(str,"%s", _value_str);
-      }
-
+class MeasurementHcsr04 : public Measurement<float>
+{
+public:
+  void toString(char *str) const override
+  {
+    char _value_str[HCSR04_MAX_MEASUREMENT_LEN];
+    dtostrf(_value, HCSR04_MEASUREMENT_MIN_WIDTH, HCSR04_MEASUREMENT_PRECISION, _value_str);
+    sprintf(str, "%s", _value_str);
+  }
 };
 
-class SensorHcsr04: public Sensor {
-    public:
+class SensorHcsr04 : public Sensor
+{
+public:
+  SensorHcsr04(t_pin, t_pin);
 
-        SensorHcsr04(t_pin, t_pin);
+  void initialize() override;
+  void read(MeasurementBase *sample) override;
+  void isr() override;
+  void calibrate() override;
 
-        void initialize() override;
-        void read(MeasurementBase *sample) override;
-        void isr() override;
-        void calibrate() override;
-
-    private:
-        int _trig_pin;
-        int _echo_pin;
-
+private:
+  int _trig_pin;
+  int _echo_pin;
 };
 
 #endif /* Sensor_HCSR04 */

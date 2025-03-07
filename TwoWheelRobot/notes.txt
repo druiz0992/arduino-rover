@@ -1,0 +1,127 @@
+Some things that can be done:
+
+
+void loop()
+{
+    // Create a MeasurementUint16 object
+
+    // Reads samples from specific sensors
+    lm393_right.read(&lm393_sample_right);
+    lm393_left.read(&lm393_sample_left);
+    range.read(&range_sample);
+    gyro.read(&q_sample);
+
+    // Get the updated value
+    float value = robot.getMeasurement<float>(HCSR04_SENSOR_IDX);
+    Serial.println(value);
+
+    int16_t value_right = robot.getMeasurement<int16_t>(LM393_RIGHT_SENSOR_IDX);
+    int16_t value_left = robot.getMeasurement<int16_t>(LM393_LEFT_SENSOR_IDX);
+    Serial.println("ticks");
+    Serial.print(value_right);
+    Serial.print(",");
+    Serial.println(value_left);
+
+    odometry.update(value_right, value_left);
+    odometry.read(&pose);
+
+    Serial.println("pose");
+    Serial.print(pose.x);
+    Serial.print(",");
+    Serial.print(pose.y);
+    Serial.print(",");
+    Serial.println(pose.phi);
+
+    // float updatedRangeValue = range_sample.getValue();
+     Serial.println(updatedRangeValue);
+    
+    uint16_t updatedLm393Value = lm393_sample.getValue();
+    Quaternion q = q_sample.getValue();
+
+    float ypr[YAW_PITCH_ROLL_DIMENSIONS];
+    gyro.toYPR(&q, ypr);
+
+     Serial.println(updatedLm393Value);
+    Serial.print("Yaw: ");
+    Serial.print(ypr[0]);
+    Serial.print(", Pitch: ");
+    Serial.print(ypr[1]);
+    Serial.print(", Roll: ");
+    Serial.println(ypr[2]);
+
+        Serial.print("Quaternion - w: ");
+        Serial.print(q.w);
+        Serial.print(", x: ");
+        Serial.print(q.x);
+        Serial.print(", y: ");
+        Serial.print(q.y);
+        Serial.print(", z: ");
+        Serial.println(q.z);
+
+    float distance;
+    range.read(&distance);
+    Serial.println(distance);
+    //float imu_sample[YAW_PITCH_ROLL_DIMENSIONS];
+    /*
+    Quaternion imu_sample;
+    
+    gyro.read(&imu_sample);
+    Serial.print(imu_sample.w);
+    Serial.print(",");
+    Serial.print(imu_sample.x);
+    Serial.print(",");
+    Serial.print(imu_sample.y);
+    Serial.print(",");
+    Serial.println(imu_sample.z);
+
+    Serial.println(imu_sample[0] * 180/M_PI);
+    Serial.println(imu_sample[1] * 180/M_PI);
+    Serial.println(imu_sample[2] * 180/M_PI);
+    */
+
+    delay(50);
+}
+
+ if (dc_up)
+    {
+        if (dc < L928N_MAX_DUTY_CYCLE)
+        {
+            dc += 0.1;
+        }
+        else
+        {
+            dc_up = false;
+            dc -= 0.1;
+        }
+    }
+    else
+    {
+        if (dc > L928N_MIN_DUTY_CYCLE)
+        {
+            dc -= 0.1;
+        }
+        else
+        {
+            dc_up = true;
+            dc += 0.1;
+        }
+    }
+    Serial.println(dc);
+    if (forward)
+    {
+        ln298n_right.forward(dc);
+        ln298n_left.forward(dc);
+        if (dc == L928N_MIN_DUTY_CYCLE)
+        {
+            forward = false;
+        }
+    }
+    else
+    {
+        ln298n_right.backward(dc);
+        ln298n_left.backward(dc);
+        if (dc == L928N_MIN_DUTY_CYCLE)
+        {
+            forward = true;
+        }
+    }

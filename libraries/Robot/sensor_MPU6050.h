@@ -7,8 +7,6 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 #include "Wire.h"
 
-
-
 #define DEFAULT_SDA_PIN 20
 #define DEFAULT_SCL_PIN 21
 
@@ -42,23 +40,22 @@
 
 #define BUFFER_SIZE DEFAULT_BUFFER_SIZE
 #define ACCEL_ERROR DEFAULT_ACCEL_ERROR
-#define GYRO_ERROR  DEFAULT_GYRO_ERROR
+#define GYRO_ERROR DEFAULT_GYRO_ERROR
 #define CALIBRATION_RETRIES DEFAULT_CALIBRATION_RETRIES
 
 #define GYRO_CALIBRATION_FACTOR 4
 #define ACCEL_CALIBRATION_FACTOR 7.8
 
-
 #define I2CDEV_IMPLEMENTATION I2CDEV_ARDUINO_WIRE
 
 #define SENSOR_IMU_DEBUG
 
-#define DEFAULT_X_ACCEL_OFFSET   642
-#define DEFAULT_Y_ACCEL_OFFSET   3412
-#define DEFAULT_Z_ACCEL_OFFSET   691
-#define DEFAULT_X_GYRO_OFFSET    89
-#define DEFAULT_Y_GYRO_OFFSET    -53
-#define DEFAULT_Z_GYRO_OFFSET    41
+#define DEFAULT_X_ACCEL_OFFSET 642
+#define DEFAULT_Y_ACCEL_OFFSET 3412
+#define DEFAULT_Z_ACCEL_OFFSET 691
+#define DEFAULT_X_GYRO_OFFSET 89
+#define DEFAULT_Y_GYRO_OFFSET -53
+#define DEFAULT_Z_GYRO_OFFSET 41
 
 #define ENABLE_CALIBRATION false
 
@@ -66,8 +63,8 @@
 #define MPU6050_MEASUREMENT_MIN_WIDTH 4
 #define MPU6050_MEASUREMENT_PRECISION 2
 
-
-typedef struct {
+typedef struct
+{
     int ax;
     int ay;
     int az;
@@ -78,9 +75,11 @@ typedef struct {
 
 } t_calibration_data;
 
-class MeasurementMpu6050: public Measurement<Quaternion> {
-    public:
-      void toString(char *str) const override {
+class MeasurementMpu6050 : public Measurement<Quaternion>
+{
+public:
+    void toString(char *str) const override
+    {
         char _value_w_str[MPU6050_MAX_MEASUREMENT_LEN];
         char _value_x_str[MPU6050_MAX_MEASUREMENT_LEN];
         char _value_y_str[MPU6050_MAX_MEASUREMENT_LEN];
@@ -89,33 +88,33 @@ class MeasurementMpu6050: public Measurement<Quaternion> {
         dtostrf(_value.x, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_x_str);
         dtostrf(_value.y, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_y_str);
         dtostrf(_value.z, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_z_str);
-        sprintf(str,"%s,%s,%s,%s", _value_w_str, _value_x_str, _value_y_str, _value_z_str);
-      }
+        sprintf(str, "%s,%s,%s,%s", _value_w_str, _value_x_str, _value_y_str, _value_z_str);
+    }
 };
 
-class SensorMpu6050: public Sensor {
-    public:
+class SensorMpu6050 : public Sensor
+{
+public:
+    SensorMpu6050();
 
-        SensorMpu6050();
+    void initialize() override;
+    void calibrate() override;
+    void read(MeasurementBase *sample) override;
+    void isr() override;
+    void toYPR(Quaternion *from, float *to);
 
-        void initialize() override;
-        void calibrate() override;
-        void read(MeasurementBase* sample) override;
-        void isr() override;
-        void toYPR(Quaternion *from, float *to);
+private:
+    int _sda_pin;
+    int _scl_pin;
 
-    private:
-        int _sda_pin;
-        int _scl_pin;
+    uint8_t _status;
 
-        uint8_t _status;
+    t_calibration_data _calibration;
 
-        t_calibration_data _calibration;
+    MPU6050 _mpu6050;
+    volatile float _ypr_sample[YAW_PITCH_ROLL_DIMENSIONS];
 
-        MPU6050 _mpu6050;
-        volatile float _ypr_sample[YAW_PITCH_ROLL_DIMENSIONS];
-
-        void _averageReadings(t_calibration_data *);
+    void _averageReadings(t_calibration_data *);
 };
 
 #endif /* Sensor_MPU6050 */

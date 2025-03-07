@@ -6,28 +6,36 @@
 
 #define LM393_DEFAULT_D0_PIN 2
 
-class MeasurementLm393: public Measurement<int16_t> {
-    public:
-      void toString(char *str) const override {
-        sprintf(str,"%d", _value);
-      }
+class MeasurementLm393Left : public Measurement<int16_t>
+{
+public:
+  void toString(char *str) const override
+  {
+    sprintf(str, "%d", _value);
+  }
 };
 
-class SensorLm393: public Sensor {
-    public:
+class MeasurementLm393Right : public Measurement<int16_t>
+{
+public:
+  void toString(char *str) const override
+  {
+    sprintf(str, "%d", _value);
+  }
+};
+class SensorLm393 : public Sensor
+{
+public:
+  SensorLm393(t_pin);
 
-        SensorLm393(t_pin );
+  void initialize() override;
+  void read(MeasurementBase *sample) override;
+  void isr() override;
+  void calibrate() override;
 
-        void initialize() override;
-        void read(MeasurementBase* sample) override;
-        void isr() override;
-        void calibrate() override;
-
-    private:
-        int _d0_pin;
-        volatile int16_t _ticks;
-
-
+private:
+  int _d0_pin;
+  volatile int16_t _ticks;
 };
 
 #endif /* Sensor_LM393 */
