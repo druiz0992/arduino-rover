@@ -7,7 +7,9 @@
 #include "two_wheel_robot.h"
 #include "wheel_odometry.h"
 
-Robot robot;
+#define DEBUG_ENABLE false
+
+Robot robot(DEBUG_ENABLE);
 
 // Wheel encoder sensors
 SensorLm393 lm393_right(LM393_DEFAULT_D0_PIN);
@@ -42,7 +44,7 @@ bool forward = true;
 
 void setup()
 {
-    Serial.begin(SERIAL_DEFAULT_SPEED);
+    Serial1.begin(SERIAL_DEFAULT_SPEED);
 
     // wheel encoder
     robot.installSensor(&lm393_right, &lm393_sample_right, LM393_DEFAULT_D0_PIN, CHANGE, LM393_RIGHT_SENSOR_IDX, LM393_RIGHT_SENSOR_CHANNEL);
@@ -68,5 +70,5 @@ void loop()
     robot.readAndDispatchSensors();
     robot.readCommand();
 
-    delay(500);
+    delay(300);
 }

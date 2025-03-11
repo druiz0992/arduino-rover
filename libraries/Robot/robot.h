@@ -18,7 +18,7 @@
 class Robot
 {
 public:
-    Robot();
+    Robot(bool debug_enable);
 
     uint8_t installSensor(Sensor *sensor, MeasurementBase *sample, t_pin, uint8_t, uint8_t, char *);
     uint8_t installIsr(uint8_t sensor_idx, t_pin pin_number, uint8_t mode);

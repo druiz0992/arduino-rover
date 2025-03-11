@@ -11,6 +11,8 @@
 #define L928N_MIN_DUTY_CYCLE 0.4
 #define L928N_MAX_COUNTER 255
 
+#define LN298_MAX_N_BYTES 50
+
 class ControllerL298N
 {
 public:

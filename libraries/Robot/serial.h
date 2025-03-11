@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "channel.h"
+#include "serial_debug.h"
 
 #define SERIAL_MAX_MSG_BYTES 100
 
@@ -15,15 +16,14 @@
 class SerialComms
 {
 public:
-  SerialComms(uint8_t n_sensors);
+  SerialComms(uint8_t controller_channel_offset, bool debug_enable);
   void send(char *msg, uint8_t chan_idx);
-  uint8_t receive(char *msg, uint8_t *handler_index);
+  uint8_t receive(char msg[MAX_SERIAL_READ_COMMANDS][SERIAL_MAX_MSG_BYTES], uint8_t *handler_index);
   void set_channel(uint8_t idx, char *channel);
-  char *get_channel(uint8_t idx);
-  uint8_t get_channel_idx(char *channel);
+  void stripQuotes();
 
 private:
-  uint8_t find_handler_index(char *msg);
+  uint8_t find_handler_index(char msg[SERIAL_MAX_MSG_BYTES]);
 
   char _tx_msg[SERIAL_MAX_MSG_BYTES];
   char _rx_msg[SERIAL_MAX_MSG_BYTES];
@@ -31,6 +31,7 @@ private:
   uint16_t _speed;
   Channel _channels;
   uint8_t _n_sensors;
+  SerialDebug _debug;
 };
 
 #endif

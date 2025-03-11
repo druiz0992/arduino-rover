@@ -2,9 +2,8 @@
 #include <TimeLib.h>
 #include "serial.h"
 
-SerialComms::SerialComms(uint8_t n_sensors)
+SerialComms::SerialComms(uint8_t controller_channel_offset, bool debug_enable) : _n_sensors(controller_channel_offset), _debug(debug_enable)
 {
-    _n_sensors = n_sensors;
     Serial.begin(SERIAL_DEFAULT_SPEED);
 }
 
@@ -17,9 +16,9 @@ void SerialComms::send(char *msg, uint8_t chan_idx)
     Serial.println(_tx_msg);
 }
 
-uint8_t SerialComms::receive(char *msg, uint8_t *handler_index)
+uint8_t SerialComms::receive(char msg[MAX_SERIAL_READ_COMMANDS][SERIAL_MAX_MSG_BYTES], uint8_t *handler_index)
 {
-    uint8_t current_idx = 0;
+    uint8_t n_commands = 0;
     while (Serial.available())
     {
         char inByte = Serial.read();
@@ -31,36 +30,53 @@ uint8_t SerialComms::receive(char *msg, uint8_t *handler_index)
         else
         {
             _rx_msg[_read_bytes] = '\0';
-            handler_index[current_idx] = find_handler_index(msg);
             _read_bytes = 0;
-            if (++current_idx >= MAX_SERIAL_READ_COMMANDS)
+            char handler_msg[SERIAL_MAX_MSG_BYTES] = {'\0'};
+            uint8_t current_idx = find_handler_index(handler_msg);
+            _debug.write(_rx_msg);
+            if (current_idx < CHANNEL_MAX_N_CHANNELS)
+            {
+                handler_index[current_idx] = current_idx;
+                strcpy(msg[current_idx], handler_msg);
+                n_commands++;
+            }
+            else
             {
                 break;
             }
         }
     }
-    return current_idx;
+    _debug.print();
+    return n_commands;
 }
 
-uint8_t SerialComms::find_handler_index(char *msg)
+void SerialComms::stripQuotes()
 {
-    char channel[CHANNEL_MAX_BYTES];
+    size_t len = strlen(_rx_msg);
+    if (len > 1 && _rx_msg[0] == '"' && _rx_msg[len - 1] == '"')
+    {
+        memmove(_rx_msg, _rx_msg + 1, len - 2);
+        _rx_msg[len - 2] = '\0'; // Null-terminate after removing the last quote
+    }
+}
+uint8_t SerialComms::find_handler_index(char msg[SERIAL_MAX_MSG_BYTES])
+{
+    char channel[CHANNEL_MAX_BYTES] = {'\0'};
     size_t len;
     uint8_t idx;
 
+    stripQuotes();
+
     if ((len = _channels.extract_channel_name(_rx_msg, channel)) == 0)
     {
-        return;
+        return 0xFF;
     }
 
     strcpy(msg, &_rx_msg[len]);
-    idx = _channels.get_channel_idx(channel);
-    if (idx != 0xFF && idx >= _n_sensors)
+    idx = _channels.get_channel_idx(channel) - _n_sensors;
+    if (idx < CHANNEL_MAX_N_CHANNELS)
     {
-        idx -= _n_sensors;
         return idx;
-        // Serial.println(channel);
-        // Serial.println(msg);
     }
     return 0xFF;
 }
@@ -68,14 +84,4 @@ uint8_t SerialComms::find_handler_index(char *msg)
 void SerialComms::set_channel(uint8_t idx, char *channel)
 {
     _channels.set_channel(idx, channel);
-}
-
-char *SerialComms::get_channel(uint8_t idx)
-{
-    return _channels.get_channel(idx);
-}
-
-uint8_t SerialComms::get_channel_idx(char *channel)
-{
-    return _channels.get_channel_idx(channel);
 }

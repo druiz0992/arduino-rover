@@ -51,11 +51,11 @@ void CombinedControllerL298N::initialize()
 
 void CombinedControllerL298N::handler(char *msg)
 {
-  char buffer[50]; // Create a copy since strtok modifies the string
+  char buffer[LN298_MAX_N_BYTES]; // Create a copy since strtok modifies the string
   float left_speed = 0.0;
   float right_speed = 0.0;
 
-  strncpy(buffer, msg, sizeof(buffer));
+  strcpy(buffer, msg);
   buffer[sizeof(buffer) - 1] = '\0';
 
   char *token = strtok(buffer, ","); // First number
@@ -77,11 +77,37 @@ void CombinedControllerL298N::controlMotor(ControllerL298N *motor, float speed)
 {
   if (speed < 0)
   {
-    motor->backward(speed);
+    if (speed > -L928N_MIN_DUTY_CYCLE)
+    {
+      speed = 0;
+      motor->stop();
+    }
+    else if (speed < -L928N_MAX_DUTY_CYCLE)
+    {
+      speed = -L928N_MAX_DUTY_CYCLE;
+      motor->backward(-speed);
+    }
+    else
+    {
+      motor->backward(-speed);
+    }
   }
   else if (speed > 0)
   {
-    motor->forward(speed);
+    if (speed < L928N_MIN_DUTY_CYCLE)
+    {
+      speed = 0;
+      motor->stop();
+    }
+    else if (speed > L928N_MAX_DUTY_CYCLE)
+    {
+      speed = L928N_MAX_DUTY_CYCLE;
+      motor->forward(speed);
+    }
+    else
+    {
+      motor->forward(speed);
+    }
   }
   else
   {

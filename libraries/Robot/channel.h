@@ -15,7 +15,7 @@ public:
   size_t extract_channel_name(const char *input, char *channel);
 
 private:
-  char _channel[CHANNEL_MAX_N_CHANNELS][CHANNEL_MAX_BYTES];
+  char _channel[CHANNEL_MAX_N_CHANNELS][CHANNEL_MAX_BYTES] = {};
 };
 
 #endif

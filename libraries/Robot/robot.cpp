@@ -57,7 +57,7 @@ static void isr9()
     _robot->isrHandler(9);
 }
 
-Robot::Robot()
+Robot::Robot(bool debug_enable)
 {
   for (uint8_t i = 0; i < ROBOT_MAX_N_SENSORS; i++)
   {
@@ -66,7 +66,7 @@ Robot::Robot()
   }
   _controller[0] = nullptr;
 
-  _serial = new SerialComms(ROBOT_MAX_N_SENSORS);
+  _serial = new SerialComms(ROBOT_MAX_N_SENSORS, debug_enable);
 
   _robot = this;
 }
@@ -208,15 +208,25 @@ void Robot::isrHandler(uint8_t sensor_idx)
 
 void Robot::readCommand()
 {
-  char buffer[SERIAL_MAX_MSG_BYTES];
+  char buffer[MAX_SERIAL_READ_COMMANDS][SERIAL_MAX_MSG_BYTES];
   uint8_t handler_index[MAX_SERIAL_READ_COMMANDS] = {0xFF};
 
   uint8_t n_commands = _serial->receive(buffer, handler_index);
+  /*
+  Serial.print("n_commands: ");
+  Serial.println(n_commands);
+  */
   for (uint8_t i = 0; i < n_commands; i++)
   {
     if (handler_index[i] != 0xFF)
     {
-      _controller[handler_index[i]]->handler(buffer);
+      /*
+      Serial.print("handler_index: ");
+      Serial.println(handler_index[i]);
+      Serial.print("buffer: ");
+      Serial.println(buffer[i]);
+      */
+      _controller[handler_index[i]]->handler(buffer[i]);
     }
   }
 }
