@@ -7,9 +7,9 @@
 #define L298N_DEFAULT_IN1_PIN 5
 #define L298N_DEFAULT_IN2_PIN 6
 
-#define L928N_MAX_DUTY_CYCLE 0.8
-#define L928N_MIN_DUTY_CYCLE 0.4
-#define L928N_MAX_COUNTER 255
+#define L298N_MAX_DUTY_CYCLE 0.75
+#define L298N_MIN_DUTY_CYCLE 0.4
+#define L298N_MAX_COUNTER 255
 
 #define LN298_MAX_N_BYTES 50
 
@@ -37,9 +37,12 @@ class CombinedControllerL298N
 public:
   ControllerL298N *left;
   ControllerL298N *right;
-  CombinedControllerL298N(ControllerL298N *left, ControllerL298N *right) : left(left), right(right) {}
+  CombinedControllerL298N(ControllerL298N *left, ControllerL298N *right) : left(left), right(right), _left_speed(0), _right_speed(0) {}
   void initialize();
   void handler(char *msg);
   void controlMotor(ControllerL298N *motor, float speed);
+private:
+  int _left_speed;
+  int _right_speed;
 };
 #endif

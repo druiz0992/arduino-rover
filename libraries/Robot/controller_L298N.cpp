@@ -22,7 +22,7 @@ void ControllerL298N::forward(float duty_cycle)
 {
   digitalWrite(_in1_pin, _low);
   digitalWrite(_in2_pin, _high);
-  int speed = duty_cycle * L928N_MAX_COUNTER;
+  int speed = duty_cycle * L298N_MAX_COUNTER;
 
   analogWrite(_en_pin, speed);
 }
@@ -31,7 +31,7 @@ void ControllerL298N::backward(float duty_cycle)
 {
   digitalWrite(_in1_pin, _high);
   digitalWrite(_in2_pin, _low);
-  int speed = duty_cycle * L928N_MAX_COUNTER;
+  int speed = duty_cycle * L298N_MAX_COUNTER;
 
   analogWrite(_en_pin, speed);
 }
@@ -51,63 +51,54 @@ void CombinedControllerL298N::initialize()
 
 void CombinedControllerL298N::handler(char *msg)
 {
-  char buffer[LN298_MAX_N_BYTES]; // Create a copy since strtok modifies the string
+  char buffer[LN298_MAX_N_BYTES];
   float left_speed = 0.0;
   float right_speed = 0.0;
 
   strcpy(buffer, msg);
   buffer[sizeof(buffer) - 1] = '\0';
 
-  char *token = strtok(buffer, ","); // First number
+  // Get left and right speeds from the message
+  char *token = strtok(buffer, ",");
   if (token != NULL)
   {
     left_speed = atof(token);
-  }
+    if (left_speed < -0.01) left_speed = -0.5; 
+    else if (left_speed > 0.01) left_speed = 0.5;
+    else left_speed = _left_speed; 
+  } else return;
 
   token = strtok(NULL, ",");
   if (token != NULL)
   {
     right_speed = atof(token);
+    if (right_speed < -0.01) right_speed = -0.5; 
+    else if (right_speed > 0.01) right_speed = 0.5;
+    else right_speed = _right_speed;
+  } else return;
+
+
+  if (left_speed != _left_speed || left_speed == 0.0) {
+    controlMotor(left, left_speed);
+    _left_speed = left_speed; // Update with new speed
   }
-  controlMotor(left, left_speed);
-  controlMotor(right, right_speed);
+
+  if (right_speed != _right_speed || right_speed == 0.) {
+    controlMotor(right, right_speed);
+    _right_speed = right_speed; // Update with new speed
+  }
 }
+
 
 void CombinedControllerL298N::controlMotor(ControllerL298N *motor, float speed)
 {
   if (speed < 0)
   {
-    if (speed > -L928N_MIN_DUTY_CYCLE)
-    {
-      speed = 0;
-      motor->stop();
-    }
-    else if (speed < -L928N_MAX_DUTY_CYCLE)
-    {
-      speed = -L928N_MAX_DUTY_CYCLE;
-      motor->backward(-speed);
-    }
-    else
-    {
-      motor->backward(-speed);
-    }
+    motor->backward(-speed);
   }
   else if (speed > 0)
   {
-    if (speed < L928N_MIN_DUTY_CYCLE)
-    {
-      speed = 0;
-      motor->stop();
-    }
-    else if (speed > L928N_MAX_DUTY_CYCLE)
-    {
-      speed = L928N_MAX_DUTY_CYCLE;
-      motor->forward(speed);
-    }
-    else
-    {
-      motor->forward(speed);
-    }
+    motor->forward(speed);
   }
   else
   {

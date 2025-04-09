@@ -77,9 +77,12 @@ uint8_t Robot::installSensor(Sensor *sensor, MeasurementBase *sample, t_pin pin_
   {
     if (_sensors[idx] != nullptr || _samples[idx] != nullptr)
       return ROBOT_STATUS_ERROR_BUSY_SENSOR_SLOT;
-    _sensors[idx] = sensor;
-    _samples[idx] = sample;
-    _serial->set_channel(idx, channel);
+      _sensors[idx] = sensor;
+      _samples[idx] = sample;
+
+    if (channel != nullptr) {
+      _serial->set_channel(idx, channel);
+    }
 
     if (mode != NO_ISR)
     {

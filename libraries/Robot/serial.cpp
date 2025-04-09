@@ -12,8 +12,11 @@ void SerialComms::send(char *msg, uint8_t chan_idx)
     char *channel;
     // time_t ts = now();
     channel = _channels.get_channel(chan_idx);
-    sprintf(_tx_msg, "%s %s", channel, msg);
-    Serial.println(_tx_msg);
+    if (channel != nullptr && strlen(channel) != 0)
+    {
+      sprintf(_tx_msg, "%s %s", channel, msg);
+      Serial.println(_tx_msg);
+    }
 }
 
 uint8_t SerialComms::receive(char msg[MAX_SERIAL_READ_COMMANDS][SERIAL_MAX_MSG_BYTES], uint8_t *handler_index)

@@ -37,6 +37,13 @@
 #define BUFFER_SIZE 64
 
 #define YAW_PITCH_ROLL_DIMENSIONS 3
+#define ACCEL_DIMENSIONS 3
+
+#define ACCEL_X_IDX 0
+#define ACCEL_Y_IDX 1
+#define ACCEL_Z_IDX 2
+
+#define GRAVITY 9.81f
 
 #define BUFFER_SIZE DEFAULT_BUFFER_SIZE
 #define ACCEL_ERROR DEFAULT_ACCEL_ERROR
@@ -75,6 +82,7 @@ typedef struct
 
 } t_calibration_data;
 
+
 class MeasurementMpu6050 : public Measurement<Quaternion>
 {
 public:
@@ -90,6 +98,28 @@ public:
         dtostrf(_value.z, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_z_str);
         sprintf(str, "%s,%s,%s,%s", _value_w_str, _value_x_str, _value_y_str, _value_z_str);
     }
+
+    MeasurementType getType() const override {
+        return MeasurementType::QUATERNION;
+    }
+};
+
+class MeasurementMpu6050Accel : public Measurement<VectorFloat>
+{
+public:
+    void toString(char *str) const override
+    {
+        char _value_x_str[MPU6050_MAX_MEASUREMENT_LEN];
+        char _value_y_str[MPU6050_MAX_MEASUREMENT_LEN];
+        char _value_z_str[MPU6050_MAX_MEASUREMENT_LEN];
+        dtostrf(_value.x, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_x_str);
+        dtostrf(_value.y, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_y_str);
+        dtostrf(_value.z, MPU6050_MEASUREMENT_MIN_WIDTH, MPU6050_MEASUREMENT_PRECISION, _value_z_str);
+        sprintf(str, "%s,%s,%s", _value_x_str, _value_y_str, _value_z_str);
+    }
+    MeasurementType getType() const override {
+        return MeasurementType::VECTOR_INT16;
+    }
 };
 
 class SensorMpu6050 : public Sensor
@@ -101,7 +131,7 @@ public:
     void calibrate() override;
     void read(MeasurementBase *sample) override;
     void isr() override;
-    void toYPR(Quaternion *from, float *to);
+    void toYPR(Quaternion *from, float *to, VectorFloat *gravity);
 
 private:
     int _sda_pin;
@@ -113,8 +143,10 @@ private:
 
     MPU6050 _mpu6050;
     volatile float _ypr_sample[YAW_PITCH_ROLL_DIMENSIONS];
+    VectorFloat _aaReal;
 
     void _averageReadings(t_calibration_data *);
+    void _setGravity(Quaternion *q, VectorFloat *gravity);
 };
 
 #endif /* Sensor_MPU6050 */

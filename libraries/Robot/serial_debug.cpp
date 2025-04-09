@@ -17,8 +17,10 @@ void SerialDebug::write(char *msg)
 };
 void SerialDebug::print()
 {
-    if (!_enable)
+    if (!_enable || _read_bytes == 0)
         return;
-    Serial.print("DEBUG ");
+    Serial.print("##debug## ");
     Serial.println(_log);
+    _read_bytes = 0;
+    _log[0] = '\0';
 }

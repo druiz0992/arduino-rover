@@ -53,16 +53,36 @@ void SensorMpu6050::read(MeasurementBase *sample) {
 
   uint8_t buffer[BUFFER_SIZE];
   Quaternion q;
-  if (this->_mpu6050.dmpGetCurrentFIFOPacket(buffer)) {
-    this->_mpu6050.dmpGetQuaternion(&q, buffer);
-    sample->setValue(q);
-  }
+  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+  VectorInt16 aaReal;         // [x, y, z]            accel sensor measurements
+  VectorFloat gravity;    // [x, y, z]            gravity vector
+
+  MeasurementType type = sample->getType();
+  if (type == MeasurementType::QUATERNION) {
+      if (this->_mpu6050.dmpGetCurrentFIFOPacket(buffer)) {
+          this->_mpu6050.dmpGetQuaternion(&q, buffer);
+          this->_setGravity(&q, &gravity);
+          this->_mpu6050.dmpGetAccel(&aa, buffer);
+          this->_mpu6050.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+          _aaReal.x = (float)aaReal.x / ACCEL_SENSITIVITY_FACTOR * GRAVITY;
+          _aaReal.y = (float)aaReal.y / ACCEL_SENSITIVITY_FACTOR * GRAVITY;
+          _aaReal.z = (float)aaReal.z / ACCEL_SENSITIVITY_FACTOR * GRAVITY;
+          //this->toYPR(&q, _ypr_sample, &gravity);
+          sample->setValue(q);
+      } 
+  } else {
+      sample->setValue(_aaReal);
+  } 
 }
 
-void SensorMpu6050::toYPR(Quaternion *from , float *to) {
-    VectorFloat gravity;
-    this->_mpu6050.dmpGetGravity(&gravity, from);
-    this->_mpu6050.dmpGetYawPitchRoll(to, from, &gravity);
+void SensorMpu6050::_setGravity(Quaternion *from , VectorFloat *gravity) {
+    this->_mpu6050.dmpGetGravity(gravity, from);
+}
+
+void SensorMpu6050::toYPR(Quaternion *from , float *to, VectorFloat *gravity) {
+    //VectorFloat gravity;
+    //this->_mpu6050.dmpGetGravity(&gravity, from);
+    this->_mpu6050.dmpGetYawPitchRoll(to, from, gravity);
 }
 
 void SensorMpu6050::calibrate(){

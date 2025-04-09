@@ -4,6 +4,12 @@
 
 #include <stdint.h>
 
+enum class MeasurementType {
+    UNKNOWN,
+    QUATERNION,
+    VECTOR_INT16
+};
+
 template<typename T>
 class Measurement;
 
@@ -21,6 +27,7 @@ class MeasurementBase {
 
         virtual ~MeasurementBase() {} // Virtual destructor for polymorphic behavior
         virtual void toString(char *) const = 0;
+        virtual MeasurementType getType() const = 0;
 
 };
 
@@ -42,6 +49,9 @@ class Measurement: public MeasurementBase {
         }
 
         virtual void toString(char *) const override {};
+        virtual MeasurementType getType() const override {
+            return MeasurementType::UNKNOWN;
+        }
 
     protected:
         T _value;

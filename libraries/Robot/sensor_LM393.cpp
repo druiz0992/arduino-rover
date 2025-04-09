@@ -31,3 +31,11 @@ void SensorLm393::read(MeasurementBase *sample)
 }
 
 void SensorLm393::calibrate() {}
+
+void SensorLm393Combined::read(MeasurementBase *sample)
+{
+  _ticks.left = _left.getTicks();
+  _ticks.right = _right.getTicks();
+
+  sample->setValue(_ticks);
+}
