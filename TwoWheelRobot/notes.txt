@@ -109,8 +109,8 @@ void loop()
     Serial.println(dc);
     if (forward)
     {
-        ln298n_right.forward(dc);
-        ln298n_left.forward(dc);
+        l298n_right.forward(dc);
+        l298n_left.forward(dc);
         if (dc == L928N_MIN_DUTY_CYCLE)
         {
             forward = false;
@@ -118,8 +118,8 @@ void loop()
     }
     else
     {
-        ln298n_right.backward(dc);
-        ln298n_left.backward(dc);
+        l298n_right.backward(dc);
+        l298n_left.backward(dc);
         if (dc == L928N_MIN_DUTY_CYCLE)
         {
             forward = true;

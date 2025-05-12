@@ -2,6 +2,8 @@
 #define __ROBOT_H__
 
 #define ROBOT_MAX_N_SENSORS 10
+#define ROBOT_MAX_N_CONTROLLERS 1
+#define ROBOT_MAX_N_PROCESSORS 1
 
 #define ROBOT_STATUS_OK 0
 #define ROBOT_STATUS_ERROR_MAX_NUMBER_OF_SENSORS 1
@@ -9,10 +11,10 @@
 #define ROBOT_STATUS_ERROR_BUSY_SENSOR_SLOT 3
 
 #define NO_ISR 1234
-#define ROBOT_N_CONTROLLERS 1
 
 #include "sensor.h"
-#include "controller_L298N.h"
+#include "controller.h"
+#include "processor.h"
 #include "serial.h"
 
 class Robot
@@ -30,13 +32,16 @@ public:
     template <typename T>
     T getMeasurement(uint8_t sensor_idx);
 
-    void installController(CombinedControllerL298N *controller, uint8_t idx, char *channel);
+    void installController(Controller *controller, MeasurementBase *sample,  uint8_t idx, char *channel);
+    void installProcessor(Processor *processor, MeasurementBase *sample, uint8_t idx, char *channel);
     void readCommand();
+    void Robot::processMeasurements();
 
 private:
     Sensor *_sensors[ROBOT_MAX_N_SENSORS];
-    MeasurementBase *_samples[ROBOT_MAX_N_SENSORS];
-    CombinedControllerL298N *_controller[ROBOT_N_CONTROLLERS];
+    MeasurementBase *_samples[ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS + ROBOT_MAX_N_PROCESSORS];
+    Controller *_controller[ROBOT_MAX_N_CONTROLLERS];
+    Processor *_processor[ROBOT_MAX_N_PROCESSORS];
     SerialComms *_serial;
 };
 

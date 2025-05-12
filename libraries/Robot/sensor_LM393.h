@@ -7,6 +7,8 @@
 #define LM393_DEFAULT_D0_PIN 2
 #define LM393_MAX_MEASUREMENT_LEN 10
 
+#define LM393_MIN_SIGNAL_TIME_USEC 500
+
 class MeasurementLm393 : public Measurement<int16_t>
 {
 public:
@@ -49,6 +51,7 @@ public:
 private:
   int _d0_pin;
   volatile int16_t _ticks;
+  volatile unsigned long _debounce; 
 };
 
 class SensorLm393Combined: public Sensor 

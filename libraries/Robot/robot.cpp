@@ -64,7 +64,16 @@ Robot::Robot(bool debug_enable)
     _sensors[i] = nullptr;
     _samples[i] = nullptr;
   }
-  _controller[0] = nullptr;
+  for (uint8_t i = 0; i < ROBOT_MAX_N_CONTROLLERS; i++)
+  {
+    _controller[i] = nullptr;
+    _samples[i + ROBOT_MAX_N_SENSORS] = nullptr;
+  }
+  for (uint8_t i = 0; i < ROBOT_MAX_N_PROCESSORS; i++)
+  {
+    _processor[i] = nullptr;
+    _samples[i + ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS] = nullptr;
+  }
 
   _serial = new SerialComms(ROBOT_MAX_N_SENSORS, debug_enable);
 
@@ -160,7 +169,7 @@ void Robot::initialize()
     if (_sensors[i] != nullptr)
       _sensors[i]->initialize();
   }
-  for (uint8_t i = 0; i < ROBOT_N_CONTROLLERS; i++)
+  for (uint8_t i = 0; i < ROBOT_MAX_N_CONTROLLERS; i++)
   {
     _controller[i]->initialize();
   }
@@ -229,7 +238,20 @@ void Robot::readCommand()
       Serial.print("buffer: ");
       Serial.println(buffer[i]);
       */
-      _controller[handler_index[i]]->handler(buffer[i]);
+      _controller[handler_index[i]]->handler(buffer[i], _samples[handler_index[i]+ROBOT_MAX_N_SENSORS]);
+    }
+  }
+}
+
+void Robot::processMeasurements() {
+  char buffer[SERIAL_MAX_MSG_BYTES];
+  for (uint8_t i = 0; i < ROBOT_MAX_N_PROCESSORS; i++)
+  {
+    if (_processor[i] != nullptr)
+    {
+      _processor[i]->processMeasurement(_samples[i + ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS]);
+      _samples[i + ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS]->toString(buffer);
+      _serial->send(buffer, i + ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS);
     }
   }
 }
@@ -248,11 +270,28 @@ T Robot::getMeasurement(uint8_t sensor_idx)
 template float Robot::getMeasurement(uint8_t sensor_idx);
 template int16_t Robot::getMeasurement(uint8_t sensor_idx);
 
-void Robot::installController(CombinedControllerL298N *controller, uint8_t idx, char *channel)
+void Robot::installController(Controller *controller, MeasurementBase *sample, uint8_t idx, char *channel)
 {
-  if (idx < ROBOT_N_CONTROLLERS)
+  if (idx < ROBOT_MAX_N_CONTROLLERS)
   {
     _controller[idx] = controller;
+    _samples[idx + ROBOT_MAX_N_SENSORS] = sample;
+  }
+
+  if (channel != nullptr) {
     _serial->set_channel(idx + ROBOT_MAX_N_SENSORS, channel);
+  }
+}
+
+void Robot::installProcessor(Processor *processor, MeasurementBase *sample, uint8_t idx, char *channel)
+{
+  if (idx < ROBOT_MAX_N_PROCESSORS)
+  {
+    _processor[idx] = processor;
+    _samples[idx + ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS] = sample;
+  }
+
+  if (channel != nullptr) {
+    _serial->set_channel(idx + ROBOT_MAX_N_SENSORS + ROBOT_MAX_N_CONTROLLERS, channel);
   }
 }

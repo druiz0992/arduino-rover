@@ -31,23 +31,26 @@ MeasurementHcsr04 range_sample;
 MeasurementMpu6050 q_sample;
 MeasurementMpu6050Accel accel_sample;
 
-t_pin ln298n_pins_left[] = {L298N_DEFAULT_EN_PIN, L298N_DEFAULT_IN1_PIN, L298N_DEFAULT_IN2_PIN};
-t_pin ln298n_pins_right[] = {LN298_RIGHT_EN_PIN, LN298_RIGHT_IN1_PIN, LN298_RIGHT_IN2_PIN};
+// Motor controller
+t_pin l298n_pins_left[] = {L298N_DEFAULT_EN_PIN, L298N_DEFAULT_IN1_PIN, L298N_DEFAULT_IN2_PIN};
+t_pin l298n_pins_right[] = {L298N_RIGHT_EN_PIN, L298N_RIGHT_IN1_PIN, L298N_RIGHT_IN2_PIN};
 
-ControllerL298N ln298n_left(ln298n_pins_left, false);
-ControllerL298N ln298n_right(ln298n_pins_right, true);
-CombinedControllerL298N wheels(&ln298n_left, &ln298n_right);
+ControllerL298N l298n_left(l298n_pins_left, false);
+ControllerL298N l298n_right(l298n_pins_right, true);
+CombinedControllerL298N wheels(&l298n_left, &l298n_right);
+MeasurementL298N wheel_sample;
 
 // Odometry
-//WheelOdometry odometry(WHEEL_DIAMETER_CM, WHEEL_DISTANCE_CM, WHEEL_ENCODER_N_SECTIONS);
+WheelOdometry odometry(WHEEL_DIAMETER_CM, WHEEL_DISTANCE_CM, WHEEL_ENCODER_N_SECTIONS, &wheel_sample, &lm393_samples);
+MeasurementPose odometry_sample;
 
 void setup()
 {
     Serial1.begin(SERIAL_DEFAULT_SPEED);
 
     // wheel encoder
-    robot.installSensor(&lm393_right, &lm393_sample_right, LM393_DEFAULT_D0_PIN, CHANGE, LM393_RIGHT_SENSOR_IDX, nullptr);
-    robot.installSensor(&lm393_left, &lm393_sample_left, LM393_LEFT_D0_PIN, CHANGE, LM393_LEFT_SENSOR_IDX, nullptr);
+    robot.installSensor(&lm393_right, &lm393_sample_right, LM393_DEFAULT_D0_PIN, RISING, LM393_RIGHT_SENSOR_IDX, nullptr);
+    robot.installSensor(&lm393_left, &lm393_sample_left, LM393_LEFT_D0_PIN, RISING, LM393_LEFT_SENSOR_IDX, nullptr);
     robot.installSensor(&lm393, &lm393_samples, NO_ISR, NO_ISR, LM393_SENSOR_IDX, LM393_SENSOR_CHANNEL);
 
     // range sensor
@@ -58,7 +61,11 @@ void setup()
     robot.installSensor(&gyro, &accel_sample, NO_ISR, NO_ISR, MPU6050_ACCEL_SENSOR_IDX, MPU6050_ACCEL_SENSOR_CHANNEL);
 
     // motor controllers
-    robot.installController(&wheels, LN298_CONTROLLER_IDX, LN298_CONTROLLER_CHANNEL);
+    robot.installController(&wheels, &wheel_sample, L298N_CONTROLLER_IDX, L298N_CONTROLLER_CHANNEL);
+
+    // processors
+    robot.installProcessor(&odometry, &odometry_sample, WHEEL_ODOMETRY_PROCESSOR_IDX, WHEEL_ODOMETRY_PROCESSOR_CHANNEL);
+
 
     robot.initialize();
 
@@ -70,8 +77,9 @@ void setup()
 
 void loop()
 {
-    robot.readAndDispatchSensors();
     robot.readCommand();
+    robot.readAndDispatchSensors();
+    robot.processMeasurements();
 
     delay(300);
 }

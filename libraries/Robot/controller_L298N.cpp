@@ -49,9 +49,9 @@ void CombinedControllerL298N::initialize()
   right->initialize();
 }
 
-void CombinedControllerL298N::handler(char *msg)
+void CombinedControllerL298N::handler(char *msg, MeasurementBase *sample)
 {
-  char buffer[LN298_MAX_N_BYTES];
+  char buffer[L298N_MAX_N_BYTES];
   float left_speed = 0.0;
   float right_speed = 0.0;
 
@@ -65,7 +65,7 @@ void CombinedControllerL298N::handler(char *msg)
     left_speed = atof(token);
     if (left_speed < -0.01) left_speed = -0.5; 
     else if (left_speed > 0.01) left_speed = 0.5;
-    else left_speed = _left_speed; 
+    else left_speed = 0.0;
   } else return;
 
   token = strtok(NULL, ",");
@@ -74,7 +74,7 @@ void CombinedControllerL298N::handler(char *msg)
     right_speed = atof(token);
     if (right_speed < -0.01) right_speed = -0.5; 
     else if (right_speed > 0.01) right_speed = 0.5;
-    else right_speed = _right_speed;
+    else right_speed = 0.0;
   } else return;
 
 
@@ -87,6 +87,11 @@ void CombinedControllerL298N::handler(char *msg)
     controlMotor(right, right_speed);
     _right_speed = right_speed; // Update with new speed
   }
+
+  t_measurement_l298n measurement;
+  measurement.left = _left_speed;
+  measurement.right = _right_speed;
+  sample->setValue(measurement);
 }
 
 
@@ -104,4 +109,10 @@ void CombinedControllerL298N::controlMotor(ControllerL298N *motor, float speed)
   {
     motor->stop();
   }
+}
+
+void CombinedControllerL298N::getSpeed(int *left_speed, int *right_speed)
+{
+  *left_speed = _left_speed;
+  *right_speed = _right_speed;
 }
